@@ -1,6 +1,7 @@
 # DecodeTTLV
 This little utility script will decode TTLV byte buffers as used in the KMIP
-protocol. The script requires the PyKMIP library for enum definitions.
+protocol. The script requires the PyKMIP library for enum definitions. To use
+the script just run it providing hex encoded TTLV data on the command line
 
 For example the following data:
 
@@ -19,7 +20,8 @@ e9bd9c39a84778b28529370ef05cb10ca080e1cfbbce2ca3ff654484f29fd0cb4200280500000004
 65302d386635622d63326638613733333136336600000000
 ```
 
-Will be converted to (key truncated for easy viewing, it wont be by the script)
+Will be converted to human readable output like so:
+(key truncated for easy viewing, it wont be by the script)
 
 ```
 RESPONSE_MESSAGE:STRUCTURE(456):stru1
