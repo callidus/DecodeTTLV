@@ -9,6 +9,7 @@ import time
 
 class DecodeTTLV(object):
     def __init__(self, buffer):
+        self.attribute_name = "".encode("utf-8")
         self.offset = 0
         self.buffer = buffer
         self.indent = ""
@@ -102,7 +103,10 @@ class DecodeTTLV(object):
         fmt = ">I"
         val = struct.unpack_from(fmt, self.buffer, self.offset)
         self.offset += size + 4  # 4 bytes padding
-        return self._get_enum_name(tag, val[0])
+        if tag == "ATTRIBUTE_VALUE":
+            return self._get_enum_name_attr(tag, val[0])
+        else:
+            return self._get_enum_name(tag, val[0])
 
     def _decode_type_bool(self, tag, size):
         fmt = ">Q"
@@ -113,6 +117,8 @@ class DecodeTTLV(object):
     def _decode_type_text(self, tag, size):
         val = self.buffer[self.offset:self.offset+size]
         self.offset += size + (8 - size % 8) % 8  # padded to mutliple of 8
+        if tag == "ATTRIBUTE_NAME":
+            self.attribute_name = val
         return str(val)
 
     def _decode_type_bytes(self, tag, size):
@@ -146,6 +152,13 @@ class DecodeTTLV(object):
             if isinstance(enum_val, enum) and enum_val.value == val:
                 return enum_val.name
 
+    def _get_enum_name_attr(self, tag, val):
+        type_name = self.attribute_name.decode('utf-8').replace(' ','')
+        enum = getattr(enums, type_name)
+        for name in dir(enum):
+            enum_val = getattr(enum, name)
+            if isinstance(enum_val, enum) and enum_val.value == val:
+                return enum_val.name
 
 if __name__ == '__main__':
     import sys
