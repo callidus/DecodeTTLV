@@ -25,6 +25,7 @@ class DecodeTTLV(object):
             'BYTE_STRING': self._decode_type_bytes,
             'DATE_TIME': self._decode_type_date,
             'INTERVAL': self._decode_type_inter,
+            'DATE_TIME_EXTENDED': self._decode_type_exdate,
         }
 
     def decode(self):
@@ -112,7 +113,7 @@ class DecodeTTLV(object):
     def _decode_type_text(self, tag, size):
         val = self.buffer[self.offset:self.offset+size]
         self.offset += size + (8 - size % 8) % 8  # padded to mutliple of 8
-        return unicode(val)
+        return str(val)
 
     def _decode_type_bytes(self, tag, size):
         val = self.buffer[self.offset:self.offset+size]
@@ -120,7 +121,7 @@ class DecodeTTLV(object):
         return binascii.hexlify(val)
 
     def _decode_type_date(self, tag, size):
-        fmt = ">L"
+        fmt = ">Q"
         val = struct.unpack_from(fmt, self.buffer, self.offset)
         self.offset += size  # variable
         return time.ctime(val[0])
@@ -130,6 +131,12 @@ class DecodeTTLV(object):
         val = struct.unpack_from(fmt, self.buffer, self.offset)
         self.offset += size + 4  # 4 bytes padding
         return val[0]
+
+    def _decode_type_exdate(self, tag, size):
+        fmt = ">Q"
+        val = struct.unpack_from(fmt, self.buffer, self.offset)
+        self.offset += size  # variable
+        return time.ctime(val[0])
 
     def _get_enum_name(self, tag, val):
         type_name = ''.join(x.capitalize() or '_' for x in tag.split('_'))
@@ -142,10 +149,10 @@ class DecodeTTLV(object):
 
 if __name__ == '__main__':
     import sys
-    bindata = ""
+    bindata = "".encode('utf-8')
     testdata = sys.argv[1]
 
-    for i in range(0, len(testdata)/2):
+    for i in range(0, int(len(testdata)/2)):
         a = testdata[i*2]
         b = testdata[i*2+1]
         bindata += struct.pack(">B", int(a+b, 16))
